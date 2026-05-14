@@ -18,7 +18,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-gray-50">
-        {user && profile && (
+        {user && (
           <Navbar user={user} profile={profile} onSignOut={signOut} />
         )}
 
@@ -60,7 +60,7 @@ function App() {
           </Routes>
         </main>
 
-        {user && profile && <Footer />}
+        {user && <Footer />}
       </div>
     </BrowserRouter>
   )

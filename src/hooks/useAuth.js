@@ -8,11 +8,13 @@ export function useAuth() {
 
   const fetchProfile = useCallback(async (userId) => {
     try {
-      const { data } = await supabase
+      const fetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle()
+      const timeoutPromise = new Promise(resolve => setTimeout(() => resolve({ data: null }), 3000))
+      const { data } = await Promise.race([fetchPromise, timeoutPromise])
       return data || null
     } catch {
       return null
@@ -22,10 +24,10 @@ export function useAuth() {
   useEffect(() => {
     let ignore = false
 
-    // Failsafe: if loading hasn't resolved in 5s, force it off
+    // Failsafe: if loading hasn't resolved in 4s, force it off
     const timeout = setTimeout(() => {
       if (!ignore) setLoading(false)
-    }, 5000)
+    }, 4000)
 
     const init = async () => {
       try {
