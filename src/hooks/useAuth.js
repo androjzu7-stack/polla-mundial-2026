@@ -1,50 +1,42 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const mountedRef = useRef(true)
 
   const fetchProfile = useCallback(async (userId) => {
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single()
-      if (error) return null
-      return data
+      return data || null
     } catch {
       return null
     }
   }, [])
 
   useEffect(() => {
-    let mounted = true
+    mountedRef.current = true
 
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession()
-        
-        if (!mounted) return
+        if (!mountedRef.current) return
 
         if (session?.user) {
           setUser(session.user)
           const p = await fetchProfile(session.user.id)
-          if (mounted) setProfile(p)
-        } else {
-          setUser(null)
-          setProfile(null)
+          if (mountedRef.current) setProfile(p)
         }
       } catch (err) {
-        console.error('Auth init error:', err)
-        if (mounted) {
-          setUser(null)
-          setProfile(null)
-        }
+        console.error('Auth error:', err)
       } finally {
-        if (mounted) setLoading(false)
+        if (mountedRef.current) setLoading(false)
       }
     }
 
@@ -52,32 +44,28 @@ export function useAuth() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return
+        if (!mountedRef.current) return
 
-        if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT' || !session) {
           setUser(null)
           setProfile(null)
           setLoading(false)
           return
         }
 
-        if (session?.user) {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setUser(session.user)
           const p = await fetchProfile(session.user.id)
-          if (mounted) {
+          if (mountedRef.current) {
             setProfile(p)
             setLoading(false)
           }
-        } else {
-          setUser(null)
-          setProfile(null)
-          setLoading(false)
         }
       }
     )
 
     return () => {
-      mounted = false
+      mountedRef.current = false
       subscription.unsubscribe()
     }
   }, [fetchProfile])
@@ -109,6 +97,7 @@ export function useAuth() {
   const signOut = async () => {
     setUser(null)
     setProfile(null)
+    setLoading(false)
     await supabase.auth.signOut()
   }
 
@@ -125,13 +114,6 @@ export function useAuth() {
     return data
   }
 
-  const refreshProfile = async () => {
-    if (!user) return
-    const p = await fetchProfile(user.id)
-    setProfile(p)
-    return p
-  }
-
   return {
     user,
     profile,
@@ -141,6 +123,5 @@ export function useAuth() {
     signUp,
     signOut,
     updateProfile,
-    refreshProfile,
   }
 }
