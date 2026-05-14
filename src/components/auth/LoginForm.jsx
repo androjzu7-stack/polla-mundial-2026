@@ -29,8 +29,16 @@ export function LoginForm({ onLogin }) {
       </div>
 
       <div className="relative w-full max-w-md animate-slide-up">
+        {/* Logo empresa */}
         <div className="text-center mb-8">
-          <div className="text-6xl mb-3">⚽</div>
+          <div className="bg-white rounded-2xl px-8 py-4 inline-block mb-5 shadow-lg">
+            <img
+              src="/logo.jpg"
+              alt="MC Grupo Empresarial"
+              className="h-14 w-auto mx-auto"
+              onError={e => { e.target.style.display='none' }}
+            />
+          </div>
           <h1 className="text-4xl text-gold-400 font-display tracking-widest">MUNDIAL 2026</h1>
           <p className="text-gray-400 font-body mt-1">Ingresa con tu usuario y contraseña</p>
         </div>

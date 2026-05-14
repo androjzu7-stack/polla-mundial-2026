@@ -27,10 +27,16 @@ export function Navbar({ user, profile, onSignOut }) {
       <div className="max-w-5xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 font-display text-2xl tracking-wider text-gold-400 hover:text-gold-300 transition-colors">
-            <span className="text-2xl">⚽</span>
-            <span className="hidden sm:inline">POLLA MUNDIAL 2026</span>
-            <span className="sm:hidden">MUNDIAL 26</span>
+          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+            <img
+              src="/logo.jpg"
+              alt="MC Grupo Empresarial"
+              className="h-9 w-auto rounded"
+              onError={e => { e.target.style.display='none' }}
+            />
+            <span className="text-gold-400 font-display text-lg tracking-wider hidden sm:inline">
+              POLLA MUNDIAL 2026
+            </span>
           </Link>
 
           {/* Desktop nav */}
