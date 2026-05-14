@@ -24,43 +24,21 @@ export function useAuth() {
   useEffect(() => {
     let ignore = false
 
-    // Failsafe: if loading hasn't resolved in 4s, force it off
     const timeout = setTimeout(() => {
       if (!ignore) setLoading(false)
     }, 4000)
 
-    const init = async () => {
-      try {
-        // Intentar refrescar el token primero
-        const { data: { session }, error } = await supabase.auth.getSession()
-
+    // onAuthStateChange fires INITIAL_SESSION on subscribe (replaces manual getSession call).
+    // autoRefreshToken:true handles token renewal and fires TOKEN_REFRESHED automatically.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
         if (ignore) return
 
-        if (error || !session) {
-          // Si no hay sesión válida, limpiar todo
-          await supabase.auth.signOut()
+        if (!session) {
           setUser(null)
           setProfile(null)
           setLoading(false)
           return
-        }
-
-        // Verificar si el token está por vencer y refrescarlo
-        const expiresAt = session.expires_at
-        const now = Math.floor(Date.now() / 1000)
-        
-        if (expiresAt && expiresAt < now + 60) {
-          // Token vencido o por vencer, refrescar
-          const { data: refreshed } = await supabase.auth.refreshSession()
-          if (!ignore && refreshed.session) {
-            setUser(refreshed.session.user)
-            const p = await fetchProfile(refreshed.session.user.id)
-            if (!ignore) {
-              setProfile(p)
-              setLoading(false)
-            }
-            return
-          }
         }
 
         setUser(session.user)
@@ -68,37 +46,6 @@ export function useAuth() {
         if (!ignore) {
           setProfile(p)
           setLoading(false)
-        }
-      } catch (e) {
-        console.error('Auth error:', e)
-        if (!ignore) {
-          setUser(null)
-          setProfile(null)
-          setLoading(false)
-        }
-      }
-    }
-
-    init()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (ignore) return
-
-        if (event === 'SIGNED_OUT' || !session) {
-          setUser(null)
-          setProfile(null)
-          setLoading(false)
-          return
-        }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          setUser(session.user)
-          const p = await fetchProfile(session.user.id)
-          if (!ignore) {
-            setProfile(p)
-            setLoading(false)
-          }
         }
       }
     )
@@ -134,7 +81,6 @@ export function useAuth() {
   const signOut = async () => {
     setUser(null)
     setProfile(null)
-    setLoading(false)
     await supabase.auth.signOut()
   }
 
