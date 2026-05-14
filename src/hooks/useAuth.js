@@ -7,21 +7,16 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId) => {
-    for (let i = 0; i < 3; i++) {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single()
-        if (data) return data
-        if (error) console.warn('Profile fetch attempt', i + 1, error.message)
-      } catch (e) {
-        console.warn('Profile fetch error:', e)
-      }
-      await new Promise(r => setTimeout(r, 500))
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single()
+      return data || null
+    } catch {
+      return null
     }
-    return null
   }, [])
 
   useEffect(() => {
@@ -29,27 +24,51 @@ export function useAuth() {
 
     const init = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession()
+        // Intentar refrescar el token primero
+        const { data: { session }, error } = await supabase.auth.getSession()
+
         if (ignore) return
 
-        if (session?.user) {
-          setUser(session.user)
-          const p = await fetchProfile(session.user.id)
-          if (!ignore) {
-            setProfile(p)
-          }
-        } else {
+        if (error || !session) {
+          // Si no hay sesión válida, limpiar todo
+          await supabase.auth.signOut()
           setUser(null)
           setProfile(null)
+          setLoading(false)
+          return
+        }
+
+        // Verificar si el token está por vencer y refrescarlo
+        const expiresAt = session.expires_at
+        const now = Math.floor(Date.now() / 1000)
+        
+        if (expiresAt && expiresAt < now + 60) {
+          // Token vencido o por vencer, refrescar
+          const { data: refreshed } = await supabase.auth.refreshSession()
+          if (!ignore && refreshed.session) {
+            setUser(refreshed.session.user)
+            const p = await fetchProfile(refreshed.session.user.id)
+            if (!ignore) {
+              setProfile(p)
+              setLoading(false)
+            }
+            return
+          }
+        }
+
+        setUser(session.user)
+        const p = await fetchProfile(session.user.id)
+        if (!ignore) {
+          setProfile(p)
+          setLoading(false)
         }
       } catch (e) {
-        console.error('Auth init error:', e)
+        console.error('Auth error:', e)
         if (!ignore) {
           setUser(null)
           setProfile(null)
+          setLoading(false)
         }
-      } finally {
-        if (!ignore) setLoading(false)
       }
     }
 
@@ -66,18 +85,13 @@ export function useAuth() {
           return
         }
 
-        if (event === 'SIGNED_IN') {
-          setLoading(true)
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           setUser(session.user)
           const p = await fetchProfile(session.user.id)
           if (!ignore) {
             setProfile(p)
             setLoading(false)
           }
-        }
-
-        if (event === 'TOKEN_REFRESHED' && session?.user) {
-          setUser(session.user)
         }
       }
     )

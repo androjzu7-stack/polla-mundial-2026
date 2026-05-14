@@ -8,8 +8,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
-    storage: window.localStorage,
     storageKey: 'polla-mundial-session',
-    flowType: 'implicit'
   }
 })
