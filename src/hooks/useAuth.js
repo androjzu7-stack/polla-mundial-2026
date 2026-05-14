@@ -7,47 +7,49 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   const fetchProfile = useCallback(async (userId) => {
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
-      return data || null
-    } catch {
-      return null
+    for (let i = 0; i < 3; i++) {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+        if (data) return data
+        if (error) console.warn('Profile fetch attempt', i + 1, error.message)
+      } catch (e) {
+        console.warn('Profile fetch error:', e)
+      }
+      await new Promise(r => setTimeout(r, 500))
     }
+    return null
   }, [])
 
   useEffect(() => {
     let ignore = false
 
-    // Primero intentar recuperar sesión del storage local
     const init = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
+        const { data: { session } } = await supabase.auth.getSession()
         if (ignore) return
-        
-        if (error || !session) {
-          setUser(null)
-          setProfile(null)
-          setLoading(false)
-          return
-        }
 
-        setUser(session.user)
-        const p = await fetchProfile(session.user.id)
-        if (!ignore) {
-          setProfile(p)
-          setLoading(false)
+        if (session?.user) {
+          setUser(session.user)
+          const p = await fetchProfile(session.user.id)
+          if (!ignore) {
+            setProfile(p)
+          }
+        } else {
+          setUser(null)
+          setProfile(null)
         }
-      } catch {
+      } catch (e) {
+        console.error('Auth init error:', e)
         if (!ignore) {
           setUser(null)
           setProfile(null)
-          setLoading(false)
         }
+      } finally {
+        if (!ignore) setLoading(false)
       }
     }
 
@@ -65,6 +67,7 @@ export function useAuth() {
         }
 
         if (event === 'SIGNED_IN') {
+          setLoading(true)
           setUser(session.user)
           const p = await fetchProfile(session.user.id)
           if (!ignore) {
@@ -73,7 +76,7 @@ export function useAuth() {
           }
         }
 
-        if (event === 'TOKEN_REFRESHED') {
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
           setUser(session.user)
         }
       }

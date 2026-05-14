@@ -11,49 +11,49 @@ import { Profile } from './pages/Profile'
 import { Admin } from './pages/Admin'
 
 function App() {
-  const { user, profile, loading, signIn, signOut, updateProfile } = useAuth()
+  const { user, profile, loading, signIn, signUp, signOut, updateProfile } = useAuth()
+
+  // Si hay user pero no profile después de cargar, forzar recarga del perfil
+  // mostrando loading hasta que llegue
+  const isReady = !loading && (user ? profile !== null : true)
 
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col bg-gray-50">
-        {user && (
+        {user && profile && (
           <Navbar user={user} profile={profile} onSignOut={signOut} />
         )}
 
         <main className="flex-1">
           <Routes>
-            {/* Login */}
             <Route
               path="/login"
-              element={user && !loading ? <Navigate to="/" replace /> : <Login onLogin={signIn} />}
+              element={isReady && user ? <Navigate to="/" replace /> : <Login onLogin={signIn} />}
             />
-
-            {/* Ruta de registro deshabilitada — admin crea las cuentas */}
             <Route path="/register" element={<Navigate to="/login" replace />} />
 
-            {/* Rutas protegidas */}
             <Route path="/" element={
-              <ProtectedRoute user={user} loading={loading}>
+              <ProtectedRoute user={isReady ? user : null} loading={!isReady}>
                 <Home profile={profile} />
               </ProtectedRoute>
             } />
             <Route path="/matches" element={
-              <ProtectedRoute user={user} loading={loading}>
+              <ProtectedRoute user={isReady ? user : null} loading={!isReady}>
                 <Matches user={user} />
               </ProtectedRoute>
             } />
             <Route path="/leaderboard" element={
-              <ProtectedRoute user={user} loading={loading}>
+              <ProtectedRoute user={isReady ? user : null} loading={!isReady}>
                 <Leaderboard user={user} />
               </ProtectedRoute>
             } />
             <Route path="/profile" element={
-              <ProtectedRoute user={user} loading={loading}>
+              <ProtectedRoute user={isReady ? user : null} loading={!isReady}>
                 <Profile user={user} profile={profile} onUpdateProfile={updateProfile} />
               </ProtectedRoute>
             } />
             <Route path="/admin" element={
-              <AdminRoute user={user} profile={profile} loading={loading}>
+              <AdminRoute user={isReady ? user : null} profile={profile} loading={!isReady}>
                 <Admin />
               </AdminRoute>
             } />
@@ -62,7 +62,7 @@ function App() {
           </Routes>
         </main>
 
-        {user && <Footer />}
+        {user && profile && <Footer />}
       </div>
     </BrowserRouter>
   )
