@@ -11,11 +11,9 @@ import { Profile } from './pages/Profile'
 import { Admin } from './pages/Admin'
 
 function App() {
-  const { user, profile, loading, signIn, signUp, signOut, updateProfile } = useAuth()
+  const { user, profile, loading, signIn, signOut, updateProfile } = useAuth()
 
-  // Si hay user pero no profile después de cargar, forzar recarga del perfil
-  // mostrando loading hasta que llegue
-  const isReady = !loading && (user ? profile !== null : true)
+  const isReady = !loading
 
   return (
     <BrowserRouter>

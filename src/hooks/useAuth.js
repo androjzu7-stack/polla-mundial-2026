@@ -12,7 +12,7 @@ export function useAuth() {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single()
+        .maybeSingle()
       return data || null
     } catch {
       return null
@@ -21,6 +21,11 @@ export function useAuth() {
 
   useEffect(() => {
     let ignore = false
+
+    // Failsafe: if loading hasn't resolved in 5s, force it off
+    const timeout = setTimeout(() => {
+      if (!ignore) setLoading(false)
+    }, 5000)
 
     const init = async () => {
       try {
@@ -98,6 +103,7 @@ export function useAuth() {
 
     return () => {
       ignore = true
+      clearTimeout(timeout)
       subscription.unsubscribe()
     }
   }, [fetchProfile])
