@@ -1,11 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState(undefined)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const mountedRef = useRef(true)
 
   const fetchProfile = useCallback(async (userId) => {
     try {
@@ -21,51 +20,49 @@ export function useAuth() {
   }, [])
 
   useEffect(() => {
-    mountedRef.current = true
+    // Timeout de seguridad: si en 8s no resuelve, fuerza loading=false
+    const safetyTimeout = setTimeout(() => {
+      setLoading(false)
+    }, 8000)
 
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!mountedRef.current) return
-
-        if (session?.user) {
-          setUser(session.user)
-          const p = await fetchProfile(session.user.id)
-          if (mountedRef.current) setProfile(p)
-        }
-      } catch (err) {
-        console.error('Auth error:', err)
-      } finally {
-        if (mountedRef.current) setLoading(false)
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(safetyTimeout)
+      if (session?.user) {
+        setUser(session.user)
+        const p = await fetchProfile(session.user.id)
+        setProfile(p)
+      } else {
+        setUser(null)
       }
-    }
-
-    initAuth()
+      setLoading(false)
+    }).catch(() => {
+      clearTimeout(safetyTimeout)
+      setUser(null)
+      setLoading(false)
+    })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mountedRef.current) return
-
-        if (event === 'SIGNED_OUT' || !session) {
+        if (event === 'SIGNED_OUT') {
           setUser(null)
           setProfile(null)
           setLoading(false)
           return
         }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN' && session?.user) {
           setUser(session.user)
           const p = await fetchProfile(session.user.id)
-          if (mountedRef.current) {
-            setProfile(p)
-            setLoading(false)
-          }
+          setProfile(p)
+          setLoading(false)
+        }
+        if (event === 'TOKEN_REFRESHED' && session?.user) {
+          setUser(session.user)
         }
       }
     )
 
     return () => {
-      mountedRef.current = false
+      clearTimeout(safetyTimeout)
       subscription.unsubscribe()
     }
   }, [fetchProfile])
@@ -80,16 +77,13 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
     if (data.user) {
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: data.user.id,
-          username: username.trim().toLowerCase(),
-          full_name: fullName.trim(),
-          is_admin: false,
-          total_points: 0,
-        })
-      if (profileError) throw profileError
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        username: username.trim().toLowerCase(),
+        full_name: fullName.trim(),
+        is_admin: false,
+        total_points: 0,
+      })
     }
     return data
   }
