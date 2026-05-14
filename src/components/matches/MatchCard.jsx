@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { Clock, MapPin, Save, CheckCircle2 } from 'lucide-react'
+import { Clock, MapPin, Save, CheckCircle2, Lock } from 'lucide-react'
 import { getPointsLabel } from '../../lib/scoring'
 
 function getMatchStatus(match) {
@@ -25,6 +25,8 @@ export function MatchCard({ match, prediction, onSavePrediction }) {
   const status = getMatchStatus(match)
   const statusConfig = STATUS_CONFIG[status]
   const isOpen = status === 'open'
+  // Once a prediction is saved it cannot be changed
+  const isEditable = isOpen && !prediction
 
   const [homeInput, setHomeInput] = useState(
     prediction ? String(prediction.predicted_home_score) : ''
@@ -108,7 +110,7 @@ export function MatchCard({ match, prediction, onSavePrediction }) {
 
       {/* Prediction section */}
       <div className="mt-4 pt-4 border-t border-gray-100">
-        {isOpen ? (
+        {isEditable ? (
           <div className="flex items-center gap-3">
             <span className="text-sm font-semibold text-gray-600 shrink-0">Tu predicción:</span>
             <div className="flex items-center gap-2 flex-1">
@@ -145,6 +147,7 @@ export function MatchCard({ match, prediction, onSavePrediction }) {
               <span className="font-bold text-navy-700 text-lg">
                 {prediction.predicted_home_score} - {prediction.predicted_away_score}
               </span>
+              {isOpen && <Lock size={13} className="text-gray-400" title="Predicción bloqueada" />}
             </div>
             {pointsInfo && (
               <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${pointsInfo.bg} ${pointsInfo.color}`}>
