@@ -1,14 +1,6 @@
-import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 
-function LoadingScreen({ onTimeout }) {
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onTimeout()
-    }, 5000)
-    return () => clearTimeout(timer)
-  }, [onTimeout])
-
+function LoadingScreen() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
@@ -20,21 +12,15 @@ function LoadingScreen({ onTimeout }) {
 }
 
 export function ProtectedRoute({ user, loading, children }) {
-  const [timedOut, setTimedOut] = useState(false)
-
-  if (timedOut) return <Navigate to="/login" replace />
-  if (loading) return <LoadingScreen onTimeout={() => setTimedOut(true)} />
+  if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
   return children
 }
 
 export function AdminRoute({ user, profile, loading, children }) {
-  const [timedOut, setTimedOut] = useState(false)
-
-  if (timedOut) return <Navigate to="/login" replace />
-  if (loading) return <LoadingScreen onTimeout={() => setTimedOut(true)} />
+  if (loading) return <LoadingScreen />
   if (!user) return <Navigate to="/login" replace />
-  if (!profile) return <LoadingScreen onTimeout={() => setTimedOut(true)} />
+  if (!profile) return <LoadingScreen />
   if (!profile.is_admin) return <Navigate to="/" replace />
   return children
 }

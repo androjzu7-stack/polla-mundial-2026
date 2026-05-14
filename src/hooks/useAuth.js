@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 
 export function useAuth() {
-  const [user, setUser] = useState(undefined)
+  const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -20,49 +20,67 @@ export function useAuth() {
   }, [])
 
   useEffect(() => {
-    // Timeout de seguridad: si en 8s no resuelve, fuerza loading=false
-    const safetyTimeout = setTimeout(() => {
-      setLoading(false)
-    }, 8000)
+    let ignore = false
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      clearTimeout(safetyTimeout)
-      if (session?.user) {
-        setUser(session.user)
-        const p = await fetchProfile(session.user.id)
-        setProfile(p)
-      } else {
-        setUser(null)
-      }
-      setLoading(false)
-    }).catch(() => {
-      clearTimeout(safetyTimeout)
-      setUser(null)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === 'SIGNED_OUT') {
+    // Primero intentar recuperar sesión del storage local
+    const init = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (ignore) return
+        
+        if (error || !session) {
           setUser(null)
           setProfile(null)
           setLoading(false)
           return
         }
-        if (event === 'SIGNED_IN' && session?.user) {
-          setUser(session.user)
-          const p = await fetchProfile(session.user.id)
+
+        setUser(session.user)
+        const p = await fetchProfile(session.user.id)
+        if (!ignore) {
           setProfile(p)
           setLoading(false)
         }
-        if (event === 'TOKEN_REFRESHED' && session?.user) {
+      } catch {
+        if (!ignore) {
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+        }
+      }
+    }
+
+    init()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (ignore) return
+
+        if (event === 'SIGNED_OUT' || !session) {
+          setUser(null)
+          setProfile(null)
+          setLoading(false)
+          return
+        }
+
+        if (event === 'SIGNED_IN') {
+          setUser(session.user)
+          const p = await fetchProfile(session.user.id)
+          if (!ignore) {
+            setProfile(p)
+            setLoading(false)
+          }
+        }
+
+        if (event === 'TOKEN_REFRESHED') {
           setUser(session.user)
         }
       }
     )
 
     return () => {
-      clearTimeout(safetyTimeout)
+      ignore = true
       subscription.unsubscribe()
     }
   }, [fetchProfile])
