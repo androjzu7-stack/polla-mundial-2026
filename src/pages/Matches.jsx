@@ -22,23 +22,53 @@ export function Matches({ user }) {
     return matchesSearch && matchesStage
   })
 
+  const now = new Date()
+  const totalMatches = matches.length
   const totalPredicted = predictions.length
-  const totalOpen = matches.filter(m => {
-    const now = new Date()
-    return new Date(m.match_date) > now && m.status === 'scheduled'
+  const openUnpredicted = matches.filter(m => {
+    const isOpen = new Date(m.match_date) > now && m.status === 'scheduled'
+    const hasPrediction = predictions.some(p => p.match_id === m.id)
+    return isOpen && !hasPrediction
   }).length
+  const pct = totalMatches > 0 ? Math.round((totalPredicted / totalMatches) * 100) : 0
 
   return (
     <div className="page-container animate-fade-in">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-4">
         <h1 className="section-title">📅 PARTIDOS</h1>
         <p className="text-gray-500 text-sm">
           Ingresa tus predicciones antes de que empiece cada partido.
-          {' '}<span className="text-navy-700 font-semibold">{totalPredicted} predicciones guardadas</span>
-          {totalOpen > 0 && <span className="text-green-600 ml-2">· {totalOpen} partidos abiertos</span>}
         </p>
       </div>
+
+      {/* Progress bar */}
+      {!matchesLoading && totalMatches > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3 mb-5">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-sm font-semibold text-gray-700">Tus predicciones</span>
+            <span className="text-sm font-bold text-navy-700">{totalPredicted} / {totalMatches}</span>
+          </div>
+          <div className="w-full bg-gray-100 rounded-full h-2.5">
+            <div
+              className="h-2.5 rounded-full transition-all duration-500"
+              style={{
+                width: `${pct}%`,
+                background: pct === 100 ? '#16a34a' : pct >= 50 ? '#1e3a5f' : '#f59e0b',
+              }}
+            />
+          </div>
+          <div className="flex justify-between mt-1.5 text-xs">
+            <span className="text-gray-400">{pct}% completado</span>
+            {openUnpredicted > 0
+              ? <span className="text-amber-600 font-semibold">{openUnpredicted} pendiente{openUnpredicted !== 1 ? 's' : ''}</span>
+              : totalPredicted === totalMatches
+                ? <span className="text-green-600 font-semibold">¡Todos predichos!</span>
+                : <span className="text-gray-400">No quedan partidos abiertos</span>
+            }
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
