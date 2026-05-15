@@ -63,7 +63,7 @@ export function Home({ user, profile }) {
             <div className="text-4xl font-display text-green-700 w-14 text-center shrink-0">3</div>
             <div>
               <p className="font-bold text-green-800">Marcador Exacto</p>
-              <p className="text-xs text-green-600 mt-1 leading-relaxed">¡Clavaste el resultado! Si predijiste 2-1 y el partido terminó 2-1, son tuyos los 3 puntos.</p>
+              <p className="text-xs text-green-600 mt-1 leading-relaxed">¡Resultado perfecto! Si predijiste 2-1 y el partido terminó 2-1, son tuyos los 3 puntos.</p>
             </div>
           </div>
           <div className="card-hover border-2 border-blue-200 bg-blue-50 flex sm:flex-col sm:text-center items-center gap-4 sm:gap-2">
