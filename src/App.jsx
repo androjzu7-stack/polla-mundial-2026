@@ -32,7 +32,7 @@ function App() {
 
             <Route path="/" element={
               <ProtectedRoute user={isReady ? user : null} loading={!isReady}>
-                <Home profile={profile} />
+                <Home user={user} profile={profile} />
               </ProtectedRoute>
             } />
             <Route path="/matches" element={

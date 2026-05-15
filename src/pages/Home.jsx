@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
 import { Trophy, Calendar, TrendingUp, Star } from 'lucide-react'
+import { ChampionPicker } from '../components/champion/ChampionPicker'
 
-export function Home({ profile }) {
+export function Home({ user, profile }) {
   const features = [
     { icon: Calendar, title: 'Predice Partidos', desc: 'Ingresa tu marcador exacto antes de cada partido. ¡3 puntos si lo clavás!' },
     { icon: TrendingUp, title: 'Ranking en Vivo', desc: 'Tabla de posiciones que se actualiza en tiempo real con cada resultado.' },
@@ -49,6 +50,9 @@ export function Home({ profile }) {
           )}
         </div>
       </div>
+
+      {/* Champion picker */}
+      {user && <ChampionPicker userId={user.id} />}
 
       {/* Sistema de puntos */}
       <div className="max-w-5xl mx-auto px-4 mb-12">
