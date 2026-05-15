@@ -63,21 +63,21 @@ export function Home({ user, profile }) {
             <div className="text-4xl font-display text-green-700 w-14 text-center shrink-0">3</div>
             <div>
               <p className="font-bold text-green-800">Marcador Exacto</p>
-              <p className="text-xs text-green-600 mt-1 leading-relaxed">Predijiste el marcador exacto del partido.</p>
+              <p className="text-xs text-green-600 mt-1 leading-relaxed">¡Clavaste el resultado! Si predijiste 2-1 y el partido terminó 2-1, son tuyos los 3 puntos.</p>
             </div>
           </div>
           <div className="card-hover border-2 border-blue-200 bg-blue-50 flex sm:flex-col sm:text-center items-center gap-4 sm:gap-2">
             <div className="text-4xl font-display text-blue-700 w-14 text-center shrink-0">1</div>
             <div>
               <p className="font-bold text-blue-800">Resultado Correcto</p>
-              <p className="text-xs text-blue-600 mt-1 leading-relaxed">Acertaste quién ganó, aunque no el marcador.</p>
+              <p className="text-xs text-blue-600 mt-1 leading-relaxed">Sabías quién iba a ganar aunque no el marcador exacto. Si predijiste 1-0 y ganó 3-0, ¡igual sumas!</p>
             </div>
           </div>
           <div className="card-hover border-2 border-purple-200 bg-purple-50 flex sm:flex-col sm:text-center items-center gap-4 sm:gap-2">
             <div className="text-4xl font-display text-purple-700 w-14 text-center shrink-0">+10</div>
             <div>
               <p className="font-bold text-purple-800">Campeón del Mundo</p>
-              <p className="text-xs text-purple-600 mt-1 leading-relaxed">Elegiste al campeón antes del torneo.</p>
+              <p className="text-xs text-purple-600 mt-1 leading-relaxed">¿Sabes quién levantará la copa? Apuesta antes del primer partido y gana 10 puntos extra que pueden voltear la tabla.</p>
             </div>
           </div>
         </div>
