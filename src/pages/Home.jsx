@@ -77,7 +77,7 @@ export function Home({ user, profile }) {
             <div className="text-4xl font-display text-purple-700 w-14 text-center shrink-0">+10</div>
             <div>
               <p className="font-bold text-purple-800">Campeón del Mundo</p>
-              <p className="text-xs text-purple-600 mt-1 leading-relaxed">¿Sabes quién levantará la copa? Apuesta antes del primer partido y gana 10 puntos extra que pueden voltear la tabla.</p>
+              <p className="text-xs text-purple-600 mt-1 leading-relaxed">¿Sabes quién levantará la copa? Elige tu campeón antes del primer partido y gana 10 puntos extra que pueden voltear la tabla.</p>
             </div>
           </div>
         </div>
